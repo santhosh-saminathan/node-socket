@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List Input Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 5px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .border-none {
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h3>List To-Do List</h3>
+    <div id="todoList"></div>
+
+    <h3>Add To Do Tasks</h3>
+
+    <form>
+        <table>
+            <tbody style="border:none">
+                <tr>
+                    <td class="border-none"> <label for="task">Task:</label></td>
+                    <td class="border-none"> <input style="margin-top: 15px;padding: 5px;" type="text" id="task"
+                            name="task" required><br><br></td>
+                </tr>
+                <tr>
+                    <td class="border-none"> <label for="username">User Name:</label> </td>
+                    <td class="border-none"> <input style="margin-top: 15px;padding: 5px;" type="text" id="username"
+                            name="username" required><br><br></td>
+                </tr>
+                <tr>
+                    <td class="border-none"><label for="useremail">User Email:</label></td>
+                    <td class="border-none"><input style="margin-top: 15px;padding: 5px;" type="text" id="useremail"
+                            name="useremail" required><br><br></td>
+                </tr>
+                <tr>
+                    <td class="border-none"> <label for="priority">Priority:</label></td>
+                    <td class="border-none"> <select style="margin-top: 15px;padding: 5px;" id="priority"
+                            name="priority">
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select><br><br>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border-none"> <label for="due_date">Due Date:</label></td>
+                    <td class="border-none"> <input style="margin-top: 15px;padding: 5px;" type="date" id="due_date"
+                            name="due_date"><br><br></td>
+                </tr>
+                <tr>
+                    <td class="border-none"> </td>
+                    <td class="border-none"> <button style="cursor:pointer;padding: 5px;" onclick="createToDo()"> Add
+                            task </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+
+    </form>
+
+</body>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    var socket = io();
+
+    socket.on("notification", (data) => {
+        console.log(`New notification: ${data}`);
+    });
+
+    socket.on("pongReadToDo", (todos) => {
+        displayTodoTable(todos);
+    });
+
+    function displayTodoTable(todos) {
+
+        let html = '<div><table class="dataTable"><tr><td>S.No</td><td>Created At </td> <td>Task</td> <td> Email</td> <td>Due Date</td><td></td></tr><tbody>';
+
+        let count = 1;
+        todos.forEach(todo => {
+
+            html += ` <tr>
+                <td>${count}</td>
+                <td>${todo.createdAt} </td>
+                <td>${todo.task} </td>
+                <td> ${todo.userEmail}</td>
+                <td> ${todo.processingTime}</td>
+                <td> <button onclick='deleteToDo(${todo.id})'>Delete</button></td></tr>`;
+            count++;
+        });
+        html += '</tbody></table></div>'
+
+        document.getElementById('todoList').insertAdjacentHTML('beforeend', html);
+
+    }
+
+    socket.emit("pingReadToDo", {});
+
+    function deleteToDo(id) {
+        console.log("deelte", id);
+        socket.emit("deleteToDo", id)
+    }
+
+    function createToDo() {
+        let data = {
+            task: document.getElementById("task").value,
+            userName: document.getElementById("username").value,
+            userEmail: document.getElementById("useremail").value,
+            priority: document.getElementById("priority").value,
+            dueDate: document.getElementById("due_date").value,
+        }
+
+        socket.emit("saveToDo", data);
+    }
+
+</script>
+
+
+</html>
